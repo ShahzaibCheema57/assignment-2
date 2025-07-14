@@ -7,27 +7,45 @@ import { Card } from "@/components/ui/card";
 
 export default function BlogSummariserForm() {
   const [url, setUrl] = useState("");
-  const [result, setResult] = useState<any>(null);
+  type SummariseResult = {
+  summary: string;
+  urduSummary: string;
+} | null;
+
+const [result, setResult] = useState<SummariseResult>(null);
+
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!url) return;
-    setLoading(true);
-    setResult(null);
-    try {
-      const res = await fetch("/api/summarise", {
-        method: "POST",
-        body: JSON.stringify({ url }),
-      });
-      const data = await res.json();
-      setResult(data);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
+  e.preventDefault();
+  if (!url) return;
+  setLoading(true);
+  setResult(null);
+
+  try {
+    const res = await fetch("/api/summarise", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ url }),
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      throw new Error(`Server error ${res.status}: ${errorText}`);
     }
-  };
+
+    const data = await res.json();
+    setResult(data);
+    } catch (err) {
+        console.error("Fetch failed:", err);
+        alert(`Error: ${err}`);
+    } finally {
+        setLoading(false);
+    }
+    };
+
 
   const suggestions = [
     "Life", "Motivation", "Success", "Happiness", "Inspiration",
